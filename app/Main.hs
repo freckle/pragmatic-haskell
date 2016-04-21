@@ -1,6 +1,6 @@
 module Main where
 
-import Data.String.Strip
+import FooParser
 
 main :: IO ()
-main = interact strip
+main = runMain
