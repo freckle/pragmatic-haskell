@@ -3,8 +3,8 @@ module FooParserSpec (main, spec) where
 import Test.Hspec
 import FooParser (parse)
 
--- main :: IO ()
--- main = hspec spec
+main :: IO ()
+main = hspec spec
 
 spec :: Spec
 spec = do
