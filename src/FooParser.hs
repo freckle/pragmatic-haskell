@@ -6,7 +6,7 @@ import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
 
 spaceConsumer :: Parser ()
-spaceConsumer = L.space (void $ spaceChar <|> char '<' <|> char '>')
+spaceConsumer = L.space (void $ spaceChar)
                         (L.skipLineComment "//")
                         (L.skipBlockComment "/*" "*/")
 
@@ -14,12 +14,10 @@ lexeme :: Parser a -> Parser a
 lexeme = L.lexeme spaceConsumer
 
 word :: Parser String
-word = spaceConsumer
-    *> (lexeme ((:) <$> letterChar <*> many (alphaNumChar <|> char '-')))
-    <* spaceConsumer
+word = lexeme $ char '<' *> ((:) <$> letterChar <*> many (alphaNumChar <|> char '-')) <* char '>'
 
 paragraph :: Parser [String]
-paragraph = many word <* string "%%%%"
+paragraph = many word <* lexeme (string "%%%%")
 
 paragraphs :: Parser [[String]]
-paragraphs = many paragraph
+paragraphs = spaceConsumer *> many paragraph <* eof
