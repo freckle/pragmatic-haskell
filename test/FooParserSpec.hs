@@ -16,8 +16,14 @@ spec = do
       runParser word "" "foo" `shouldBe` Right "foo"
     it "can parse word with empty space" $ do
       runParser word "" "foo     s" `shouldBe` Right "foo"
-    it "can parse word with brackets around it" $ do
-      runParser (brackets word) "" "<foo>" `shouldBe` Right "foo"
-    it "can parse several words with brackets" $ do
-      pending
+    it "can parse word with dashes" $ do
+      runParser word "" "foo-bar" `shouldBe` Right "foo-bar"
+    it "can parse word with brackets" $ do
+      runParser word "" "<foo>" `shouldBe` Right "foo"
+    it "can parse many words" $ do
+      runParser paragraph "" "foo bar %%%%" `shouldBe` Right ["foo", "bar"]
+    it "can parse many bracketed" $ do
+      runParser paragraph "" "<foo> <bar> %%%%" `shouldBe` Right ["foo", "bar"]
+    it "can parse many paragraphs" $ do
+      runParser paragraphs "" "<foo> %%%% <bar> %%%%" `shouldBe` Right [["foo"], ["bar"]]
 
