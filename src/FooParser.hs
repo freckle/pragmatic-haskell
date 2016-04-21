@@ -4,6 +4,7 @@ import Control.Monad (void)
 import Text.Megaparsec
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
+import Prelude hiding (words)
 
 spaceConsumer :: Parser ()
 spaceConsumer = L.space (void $ spaceChar)
@@ -14,10 +15,22 @@ lexeme :: Parser a -> Parser a
 lexeme = L.lexeme spaceConsumer
 
 word :: Parser String
-word = lexeme $ char '<' *> ((:) <$> letterChar <*> many (alphaNumChar <|> char '-')) <* char '>'
+word = lexeme $ do
+  _ <- char '<'
+  first <- letterChar
+  rest <- many (alphaNumChar <|> char '-')
+  _ <- char '>'
+  return $ first:rest
 
 paragraph :: Parser [String]
-paragraph = many word <* lexeme (string "%%%%")
+paragraph = do
+  words <- many word
+  _ <- lexeme (string "%%%%")
+  return words
 
 paragraphs :: Parser [[String]]
-paragraphs = spaceConsumer *> many paragraph <* eof
+paragraphs = do
+  spaceConsumer
+  paragraphs' <- many paragraph
+  eof
+  return paragraphs'
