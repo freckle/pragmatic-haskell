@@ -13,6 +13,8 @@ main = hspec spec
 spec :: Spec
 spec = do
   describe "parse stuff" $ do
+    it "empty string should not be a word" $ do
+      runParser word "" "" `shouldSatisfy` isLeft
     it "can parse a word" $ do
       runParser word "" "<foo>" `shouldBe` Right "foo"
     it "can parse word with empty space" $ do
@@ -25,6 +27,10 @@ spec = do
       runParser paragraphs "" "<foo-bar> <baz> %%%% <quux>"
       `shouldBe`
       Right [["foo-bar", "baz"], ["quux"]]
+    it "ending delimiter should not parse" $ do
+      runParser paragraphs "" "<foo-bar> <baz> %%%% <quux> %%%% "
+      `shouldSatisfy`
+      isLeft
     it "can parse paragraphs with only one paragraph" $ do
       runParser paragraphs "" "<foo-bar> <baz>"
       `shouldBe`

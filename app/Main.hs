@@ -4,10 +4,10 @@ import System.Environment (getEnv)
 import Text.Megaparsec (runParser)
 import Data.Monoid ((<>))
 import FooParser
-import           Control.Monad.IO.Class  (liftIO)
-import           Database.Persist
-import           Database.Persist.Sqlite
-import           Database.Persist.TH
+import Control.Monad.IO.Class  (liftIO)
+import Database.Persist
+import Database.Persist.Sqlite
+import Database.Persist.TH
 import Data.Traversable
 import Data.Maybe
 import Data.List (find, intersperse)
@@ -36,16 +36,19 @@ main = do
     runMigration migrateAll
     usersE <- forM users (\u -> upsert u [])
 
-    _ <- forM usses $ \(UserSection username (Section sect)) -> do
+    messagesE <- fmap concat $ forM usses $ \(UserSection username (Section sect)) -> do
       let ue = fromMaybe (error "user not found")
              $ find (\u -> userName (entityVal u) == username) usersE
-          -- don't do this in the real world, use Safe
-          stitched = head $ map (\listWords -> concat $ intersperse " " listWords) sect
-      liftIO $ print stitched
+          stitched = map (\listWords -> concat $ intersperse " " listWords) sect
+      forM stitched (\message -> insert $ Message (entityKey ue) message)
 
-      -- forM sect (\s -> insert $ Message (entityKey ue) s)
+    u' <- selectList ([] :: [Filter User]) []
+    liftIO $ print u'
 
-    -- liftIO $ print messages
+    m' <- selectList ([] :: [Filter Message]) []
+    liftIO $ print m'
+
+    
+
     return ()
-
   print "done"

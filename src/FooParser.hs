@@ -23,19 +23,18 @@ lexeme = L.lexeme spaceConsumer
 word :: Parser String
 word = lexeme $ do
   _ <- char '<'
-  first <- letterChar
-  rest <- many (alphaNumChar <|> char '-')
+  all <- some (alphaNumChar <|> char '-')
   _ <- char '>'
-  return $ first:rest
+  return all
 
 paragraph :: Parser [String]
 paragraph = do
-  words <- many word
+  words <- some word
   return words
 
 paragraphs :: Parser [[String]]
 paragraphs = do
-  paragraphs' <- paragraph `sepBy` lexeme (string "%%%%")
+  paragraphs' <- paragraph `sepBy1` lexeme (string "%%%%")
   return paragraphs'
 
 section :: Parser Section
@@ -47,7 +46,7 @@ section = do
 
 userSection :: Parser UserSection
 userSection = do
-  username <- lexeme $ many alphaNumChar
+  username <- lexeme $ some alphaNumChar
   _ <- lexeme $ char ':'
   s' <- section
   return $ UserSection username s'
@@ -55,6 +54,6 @@ userSection = do
 userSections :: Parser [UserSection]
 userSections = do
   spaceConsumer
-  usses <- many userSection
+  usses <- some userSection
   eof
   return usses
