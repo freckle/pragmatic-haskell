@@ -1,5 +1,9 @@
 module Main where
 
+-- things we can do better:
+-- * use Text
+-- * use optparse
+
 import System.Environment (getEnv)
 import Text.Megaparsec (runParser)
 import Data.Monoid ((<>))
@@ -47,8 +51,6 @@ main = do
 
     m' <- selectList ([] :: [Filter Message]) []
     liftIO $ print m'
-
-    
 
     return ()
   print "done"
