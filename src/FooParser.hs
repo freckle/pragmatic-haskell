@@ -2,7 +2,6 @@ module FooParser where
 
 import Control.Monad (void)
 import Text.Megaparsec
-import Text.Megaparsec.Expr
 import Text.Megaparsec.String -- input stream is of type ‘String’
 import qualified Text.Megaparsec.Lexer as L
 
