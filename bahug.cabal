@@ -19,8 +19,22 @@ library
   ghc-options:         -Wall
   hs-source-dirs:      src
   exposed-modules:     FooParser
+                     , Entities
   build-depends:       base >= 4.7 && < 5
                      , megaparsec
+                     , persistent
+                     , persistent-sqlite
+                     , persistent-template
+                     , transformers
+  default-extensions:  EmptyDataDecls
+                     , FlexibleContexts
+                     , GADTs
+                     , GeneralizedNewtypeDeriving
+                     , MultiParamTypeClasses
+                     , OverloadedStrings
+                     , QuasiQuotes
+                     , TemplateHaskell
+                     , TypeFamilies
 
 executable bahug
   default-language:    Haskell2010
@@ -29,6 +43,19 @@ executable bahug
   main-is:             Main.hs
   build-depends:       base
                      , bahug
+                     , transformers
+                     , persistent
+                     , persistent-sqlite
+                     , megaparsec
+  default-extensions:  EmptyDataDecls
+                     , FlexibleContexts
+                     , GADTs
+                     , GeneralizedNewtypeDeriving
+                     , MultiParamTypeClasses
+                     , OverloadedStrings
+                     , QuasiQuotes
+                     , TemplateHaskell
+                     , TypeFamilies
 
 test-suite spec
   default-language:    Haskell2010
