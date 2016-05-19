@@ -13,12 +13,9 @@ main = do
   fileContents <- readFile "specs.foo"
 
   -- could be pure but we're using print so we'll get an IO back
-  sections <- case runParser parseSections "specs.foo" fileContents of
-        Left err -> do
-          print err
-          error "could not parse .foo file"
-        Right sections' -> return sections'
-
+  let sections = case runParser parseSections "specs.foo" fileContents of
+        Left err        -> error $ "could not parse .foo file with error: " ++ show err
+        Right sections' -> sections'
 
   runSqlite ":memory:" $ do
     runMigration migrateAll
@@ -40,5 +37,6 @@ main = do
     liftIO $ print "all done"
 
     -- TODO: talk about TH
+    -- TODO: talk about Entities in persistent
     -- TODO: something interesting in esqueleto, preferably composable
     -- TODO: tests
