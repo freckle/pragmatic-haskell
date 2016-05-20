@@ -1,21 +1,20 @@
 machine:
   ghc:
     version: 7.10.2
-  environment:
-    STACKBUILD: "stack build --jobs=1"
 
 dependencies:
   pre:
     - mkdir -p ~/.local/bin
     - curl -L https://github.com/commercialhaskell/stack/releases/download/v1.0.0/stack-1.0.0-linux-x86_64.tar.gz | tar -xzv -C ~/.local/bin && ln -vsf ~/.local/bin/stack-*/stack ~/.local/bin/stack
+    - sudo apt-get update
+    - sudo apt-get install sqlite3 libsqlite3-dev
   cache_directories:
     - "~/.stack"
     - "~/bahug/.stack-work"
   override:
+    - sudo update-alternatives --set gcc /usr/bin/gcc-4.6 # Remove these once Circle CI's GCC 4.9
+    - sudo update-alternatives --set g++ /usr/bin/g++-4.6 # start working with --coverage.
     - stack setup
-    - $STACKBUILD --test --only-dependencies --no-run-tests:
-        timeout: 3600
 test:
   override:
-    - $STACKBUILD --test:
-        timeout: 3600
+    - stack test
