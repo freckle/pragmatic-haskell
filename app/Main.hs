@@ -6,7 +6,6 @@ import Database.Persist
 import Database.Persist.Sqlite
 import Text.Megaparsec
 import FooParser (parseSections, Section(..))
-import Data.List (unwords)
 import qualified Database.Esqueleto as E
 
 main :: IO ()
@@ -26,30 +25,29 @@ main = do
     runMigration migrateAll
 
     -- prepare users, insert users, get entities
-    let users = map (\section -> User $ sectionUsername section) sections
-    userKeys <- insertMany users
-    let userEntities = zipWith (\key user -> Entity key user) userKeys users
+    let users = map (\section -> User $ sectionUsername section) sections :: [User]
+    _ <- insertMany users
+
+    -- fetch all users (note GHC type hint here)
+    userEntities <- selectList ([] :: [Filter User]) []
+    liftIO $ putStrLn ""
+    liftIO $ putStrLn "Users:"
+    liftIO $ print userEntities
+
+    -- let's fetch all users with filter, (questionably useful) limit and sorting
+    userEntities' <- selectList ([UserName ==. "alex"]) [LimitTo 1, Asc UserName]
+    liftIO $ putStrLn ""
+    liftIO $ putStrLn "Users:"
+    liftIO $ print userEntities'
 
     -- prepare paragraphs, insert pagaraphs
-        paragraphs = concat $
+    let paragraphs = concat $
                      [ map (\pars -> Paragraph (unwords pars) (entityKey u)) (sectionParagraphs s)
                      | u <- userEntities
                      , s <- sections
                      , userName (entityVal u) == sectionUsername s ]
 
-    parKeys <- insertMany paragraphs
-
-    -- let's fetch all users (note GHC type hint here)
-    users' <- selectList ([] :: [Filter User]) []
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "Users:"
-    liftIO $ print users'
-
-    -- let's fetch all users with filter, (questionably useful) limit and sorting
-    users'' <- selectList ([UserName ==. "alex"]) [LimitTo 1, Asc UserName]
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "Users:"
-    liftIO $ print users''
+    _ <- insertMany paragraphs
 
     allParags <- selectList ([] :: [Filter Paragraph]) []
     liftIO $ putStrLn ""
@@ -84,4 +82,4 @@ main = do
     liftIO $ putStrLn ""
     liftIO $ print "--- all done ---"
 
-    -- TODO: tests against DB perhaps?
+--     -- TODO: tests against DB perhaps?

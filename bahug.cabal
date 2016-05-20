@@ -48,15 +48,7 @@ executable bahug
                      , persistent-sqlite
                      , megaparsec
                      , esqueleto
-  default-extensions:  EmptyDataDecls
-                     , FlexibleContexts
-                     , GADTs
-                     , GeneralizedNewtypeDeriving
-                     , MultiParamTypeClasses
-                     , OverloadedStrings
-                     , QuasiQuotes
-                     , TemplateHaskell
-                     , TypeFamilies
+  default-extensions:  OverloadedStrings
 
 test-suite spec
   default-language:    Haskell2010
