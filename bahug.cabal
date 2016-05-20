@@ -47,6 +47,7 @@ executable bahug
                      , persistent
                      , persistent-sqlite
                      , megaparsec
+                     , esqueleto
   default-extensions:  EmptyDataDecls
                      , FlexibleContexts
                      , GADTs
