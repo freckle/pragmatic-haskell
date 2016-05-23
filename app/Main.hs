@@ -27,10 +27,9 @@ main = do
     forM_ sections $ \section -> do
       let user = User $ sectionUsername section
       userId <- insert user
-      forM_ (sectionParagraphs section) $ (\p -> do
+      forM_ (sectionParagraphs section) $ \p -> do
         let paragraph = Paragraph (unwords p) userId
         insert paragraph
-        )
 
     -- fetch all users (note GHC type hint here)
     userEntities <- selectList ([] :: [Filter User]) []
