@@ -58,7 +58,19 @@ main = do
       putStrLn "All Paragraphs:"
       print allParags
 
-    -- uh oh.. how do I join? esqueleto to the rescue
+    -- uh oh.. how do I join? could do raw sql as a last resort
+    let sql = "SELECT ?? \
+             \ FROM users \
+             \ INNER JOIN paragraphs ON users.id = paragraphs.user_id \
+             \ WHERE users.name = ?"
+    alexRawParags <- rawSql sql [PersistText "alex"]
+    liftIO $ do
+      putStrLn ""
+      putStrLn "Alex's raw paragraphs:"
+      -- GHC has no clue what the raw sql is returning unless I tell it
+      print (alexRawParags :: [Entity Paragraph])
+
+    -- eh, that works, but we can do much better. esqueleto to the rescue
     alexParags <- E.select $
                   E.from $ \(users `E.InnerJoin` paragraphs) -> do
                   E.on ((users E.^. UserId) E.==. (paragraphs E.^.ParagraphUserId))
