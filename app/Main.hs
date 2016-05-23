@@ -17,28 +17,30 @@ main = do
         Left err        -> error $ "could not parse .foo file with error: " ++ show err
         Right sections' -> sections'
 
-  -- run everything inside single connection/txn against an in-memory
-  -- instance of SQLite
-  runSqlite ":memory:" $ do
+  -- run everything inside single connection/txn against a sqlite file
+  runSqlite "ourdb.sqlite" $ do
 
-    -- run a safe migration
     runMigration migrateAll
 
-    -- prepare users, insert users, get entities
+    -- prepare users, insert users, get entities. reminder:
+    -- Section { sectionUsername :: [String], sectionParagraphs :: [[String]] }
     let users = map (\section -> User $ sectionUsername section) sections :: [User]
     _ <- insertMany users
 
     -- fetch all users (note GHC type hint here)
     userEntities <- selectList ([] :: [Filter User]) []
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "Users:"
-    liftIO $ print userEntities
+    liftIO $ do
+      putStrLn ""
+      putStrLn "Users:"
+      print userEntities
 
-    -- let's fetch all users with filter, (questionably useful) limit and sorting
+    -- let's fetch all users with filter, (questionably useful) limit and
+    -- ordering
     userEntities' <- selectList ([UserName ==. "alex"]) [LimitTo 1, Asc UserName]
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "Users:"
-    liftIO $ print userEntities'
+    liftIO $ do
+      putStrLn ""
+      putStrLn "Users:"
+      print userEntities'
 
     -- prepare paragraphs, insert pagaraphs
     let paragraphs = concat $
@@ -46,24 +48,27 @@ main = do
                      | u <- userEntities
                      , s <- sections
                      , userName (entityVal u) == sectionUsername s ]
+                     :: [Paragraph]
 
     _ <- insertMany paragraphs
 
     allParags <- selectList ([] :: [Filter Paragraph]) []
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "All Paragraphs:"
-    liftIO $ print allParags
+    liftIO $ do
+      putStrLn ""
+      putStrLn "All Paragraphs:"
+      print allParags
 
     -- uh oh.. how do I join? esqueleto to the rescue
     alexParags <- E.select $
-                  E.from $ \(users `E.LeftOuterJoin` paragraphs) -> do
+                  E.from $ \(users `E.InnerJoin` paragraphs) -> do
                   E.on ((users E.^. UserId) E.==. (paragraphs E.^.ParagraphUserId))
                   E.where_ ((users E.^. UserName) E.==. (E.val "alex"))
                   return paragraphs
 
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "Alex's Paragraphs:"
-    liftIO $ print alexParags
+    liftIO $ do
+      putStrLn ""
+      putStrLn "Alex's Paragraphs:"
+      print alexParags
 
     -- we can compose! Define fn giving us alex where clause
     let whereClause table = E.where_ ((table E.^. UserName) E.==. (E.val "alex"))
@@ -75,11 +80,13 @@ main = do
                       E.limit 1
                       return paragraphs
 
-    liftIO $ putStrLn ""
-    liftIO $ putStrLn "Alex's First Paragraph:"
-    liftIO $ print alexFirstParag
+    liftIO $ do
+      putStrLn ""
+      putStrLn "Alex's First Paragraph:"
+      print alexFirstParag
 
-    liftIO $ putStrLn ""
-    liftIO $ print "--- all done ---"
+    liftIO $ do
+      putStrLn ""
+      putStrLn "--- all done ---"
 
---     -- TODO: tests against DB perhaps?
+-- --     -- TODO: tests against DB perhaps?

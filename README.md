@@ -8,5 +8,5 @@ To run:
 
 To see splices:
 
-    stack clean && stack build --ghc-options=-ddump-splices
+    stack clean && stack build --ghc-options="-ddump-splices -dsuppress-all"
     find . -name "*.dump-splices" -exec cat {} \;
