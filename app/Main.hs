@@ -7,6 +7,7 @@ import Database.Persist.Sqlite
 import Text.Megaparsec
 import FooParser (parseSections, Section(..))
 import qualified Database.Esqueleto as E
+import Control.Monad
 
 main :: IO ()
 main = do
@@ -22,10 +23,14 @@ main = do
 
     runMigration migrateAll
 
-    -- prepare users, insert users, get entities. reminder:
-    -- Section { sectionUsername :: [String], sectionParagraphs :: [[String]] }
-    let users = map (\section -> User $ sectionUsername section) sections :: [User]
-    _ <- insertMany users
+    -- insert user and pagaraph in one go
+    forM_ sections $ \section -> do
+      let user = User $ sectionUsername section
+      userId <- insert user
+      forM_ (sectionParagraphs section) $ (\p -> do
+        let paragraph = Paragraph (unwords p) userId
+        insert paragraph
+        )
 
     -- fetch all users (note GHC type hint here)
     userEntities <- selectList ([] :: [Filter User]) []
@@ -41,16 +46,6 @@ main = do
       putStrLn ""
       putStrLn "Users:"
       print userEntities'
-
-    -- prepare paragraphs, insert pagaraphs
-    let paragraphs = concat $
-                     [ map (\pars -> Paragraph (unwords pars) (entityKey u)) (sectionParagraphs s)
-                     | u <- userEntities
-                     , s <- sections
-                     , userName (entityVal u) == sectionUsername s ]
-                     :: [Paragraph]
-
-    _ <- insertMany paragraphs
 
     allParags <- selectList ([] :: [Filter Paragraph]) []
     liftIO $ do
