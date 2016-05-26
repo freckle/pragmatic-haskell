@@ -18,6 +18,7 @@ main = do
   let sections = case runParser parseSections "specs.foo" fileContents of
         Left err        -> error $ "could not parse .foo file with error: " ++ show err
         Right sections' -> sections'
+        :: [Section]
 
   -- run everything inside single connection/txn against a sqlite file
   runSqlite "ourdb.sqlite" $ do
@@ -26,22 +27,30 @@ main = do
 
     -- insert user and pagaraph in one go
     forM_ sections $ \section -> do
-      let user = User $ sectionUsername section
+      let user = User { userName = sectionUsername section }
       userId <- insert user
       forM_ (sectionParagraphs section) $ \p -> do
-        let paragraph = Paragraph (unwords p) userId
+        let paragraph = Paragraph { paragraphContent = (unwords p)
+                                  , paragraphUserId = userId
+                                  }
         insert paragraph
 
     -- fetch all users (note GHC type hint here)
-    userEntities <- selectList ([] :: [Filter User]) []
+    userEntities <- selectList [] []
     liftIO $ do
       putStrLn ""
       putStrLn "Users:"
-      print userEntities
+      print (userEntities :: [Entity User])
+
+    allParags <- selectList ([] :: [Filter Paragraph]) []
+    liftIO $ do
+      putStrLn ""
+      putStrLn "All Paragraphs:"
+      print allParags
 
     -- let's fetch all users with filter, (questionably useful) limit and
     -- ordering
-    userEntities' <- selectList ([UserName ==. "alex"]) [LimitTo 1, Asc UserName]
+    userEntities' <- selectList [UserName ==. "alex"] [LimitTo 1, Asc UserName]
     liftIO $ do
       putStrLn ""
       putStrLn "Users:"
@@ -67,7 +76,7 @@ main = do
     alexRawParags <- rawSql sql [PersistText "alex"]
     liftIO $ do
       putStrLn ""
-      putStrLn "Alex's raw paragraphs:"
+      putStrLn "Alex's Raw Paragraphs:"
       -- GHC has no clue what the raw sql is returning unless I tell it
       print (alexRawParags :: [Entity Paragraph])
 
@@ -80,7 +89,7 @@ main = do
 
     liftIO $ do
       putStrLn ""
-      putStrLn "Alex's Paragraphs:"
+      putStrLn "Alex's Esqueleto Paragraphs:"
       print alexParags
 
     -- we can compose! Define fn giving us alex where clause
@@ -91,6 +100,7 @@ main = do
                       E.on ((users E.^. UserId) E.==. (paragraphs E.^.ParagraphUserId))
                       (whereClause users) -- can reuse this!
                       E.limit 1
+                      E.orderBy [E.asc (paragraphs E.^. ParagraphId)]
                       return paragraphs
 
     liftIO $ do
@@ -101,5 +111,3 @@ main = do
     liftIO $ do
       putStrLn ""
       putStrLn "--- all done ---"
-
--- --     -- TODO: tests against DB perhaps?
