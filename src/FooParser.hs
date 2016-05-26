@@ -5,8 +5,8 @@ import Text.Megaparsec
 import Text.Megaparsec.String -- input stream is of type ‘String’
 import qualified Text.Megaparsec.Lexer as L
 
-data Section = Section { username :: String
-                       , paragraphs :: [[String]]
+data Section = Section { sectionUsername :: String
+                       , sectionParagraphs :: [[String]]
                        } deriving (Eq, Show)
 
 spaceConsumer :: Parser ()
