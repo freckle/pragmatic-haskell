@@ -8,6 +8,7 @@ import Text.Megaparsec
 import FooParser (parseSections, Section(..))
 import qualified Database.Esqueleto as E
 import Control.Monad
+import Database.Persist.Sql (toSqlKey)
 
 main :: IO ()
 main = do
@@ -51,6 +52,12 @@ main = do
       putStrLn ""
       putStrLn "All Paragraphs:"
       print allParags
+
+    -- sample update
+    _ <- updateWhere [ParagraphId ==. (toSqlKey 1)] [ParagraphContent =. "foo"]
+
+    -- sample delete
+    _ <- deleteWhere [ParagraphContent ==. "foo"]
 
     -- uh oh.. how do I join? could do raw sql as a last resort
     let sql = "SELECT ?? \
